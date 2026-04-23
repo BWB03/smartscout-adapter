@@ -1,5 +1,7 @@
 # SmartScout Adapter
 
+> Brought to you by [SkillCrate](https://github.com/BWB03/skillcrate) — the open-source marketplace for Amazon seller agent skills.
+
 Standalone MCP server + OpenClaw-style library wrapper for the official SmartScout API.
 
 This repo follows the same adapter premise as `datadive-adapter`: normalize SmartScout responses into a consistent, agent-readable envelope so Claude, ChatGPT, Helm, or any MCP client can consume them predictably.
