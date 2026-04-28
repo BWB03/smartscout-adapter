@@ -343,6 +343,21 @@ class SmartScoutValidationError extends Error {
   }
 }
 
+function coerceListFilters(
+  filters: Record<string, unknown> | undefined,
+  listKeys: readonly string[]
+) {
+  if (!filters) return filters;
+  const normalized: Record<string, unknown> = { ...filters };
+  for (const key of listKeys) {
+    const value = normalized[key];
+    if (Array.isArray(value)) {
+      normalized[key] = { filter: value };
+    }
+  }
+  return normalized;
+}
+
 function formatAllowedKeys(keys: readonly string[]): string {
   return keys.join(", ");
 }
@@ -393,20 +408,34 @@ function validateSortBy(
 }
 
 export function validateBrandSearchFilters(filters?: Record<string, unknown>) {
-  return validateFilterKeys("smartscout_search_brands", filters, BRAND_FILTER_KEYS);
+  return validateFilterKeys(
+    "smartscout_search_brands",
+    coerceListFilters(filters, ["brandNames"]),
+    BRAND_FILTER_KEYS
+  );
 }
 
 export function validateProductSearchFilters(filters?: Record<string, unknown>) {
-  return validateFilterKeys("smartscout_search_products", filters, PRODUCT_FILTER_KEYS, {
-    asinList: "asins",
-  });
+  return validateFilterKeys(
+    "smartscout_search_products",
+    coerceListFilters(filters, ["asins", "upcs"]),
+    PRODUCT_FILTER_KEYS,
+    {
+      asinList: "asins",
+    }
+  );
 }
 
 export function validateSellerSearchFilters(filters?: Record<string, unknown>) {
-  return validateFilterKeys("smartscout_search_sellers", filters, SELLER_FILTER_KEYS, {
-    sellerId: "amazonSellerId",
-    sellerIds: "amazonSellerIds",
-  });
+  return validateFilterKeys(
+    "smartscout_search_sellers",
+    coerceListFilters(filters, ["amazonSellerIds", "sellerNames", "businessNames"]),
+    SELLER_FILTER_KEYS,
+    {
+      sellerId: "amazonSellerId",
+      sellerIds: "amazonSellerIds",
+    }
+  );
 }
 
 export function validateSubcategorySearchFilters(filters?: Record<string, unknown>) {

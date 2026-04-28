@@ -195,7 +195,7 @@ server.tool(
 
 server.tool(
   "smartscout_search_products",
-  "Search SmartScout products. Known filter keys include asin, asins, brandName, categoryName, subcategoryName, subcategoryId, rank, monthlyRevenueEstimate, reviewCount, reviewRating, buyBoxPrice, productPageScore, numberOfSellers, numberFbaSellers, outOfStockNow, isVariation, parentAsin, title, upc, and listedSince. Use asins, not asinList.",
+  "Search SmartScout products. Known filter keys include asin, asins, brandName, categoryName, subcategoryName, subcategoryId, rank, monthlyRevenueEstimate, reviewCount, reviewRating, buyBoxPrice, productPageScore, numberOfSellers, numberFbaSellers, outOfStockNow, isVariation, parentAsin, title, upc, and listedSince. For one exact ASIN, prefer asin. If you use asins, send SmartScout list-filter form or a bare array the adapter can coerce. Do not use asinList.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,

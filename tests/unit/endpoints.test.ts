@@ -74,6 +74,23 @@ describe("smartscout endpoints", () => {
     expect(client.post).not.toHaveBeenCalled();
   });
 
+  it("coerces bare asins arrays into SmartScout list-filter form", async () => {
+    const client = {
+      post: vi.fn().mockResolvedValue({ data: [], paging: { hasMoreRecords: false } }),
+    } as any;
+
+    await searchProducts(client, { asins: ["B001"] }, { marketplace: "US" });
+
+    expect(client.post).toHaveBeenCalledWith(
+      "/api/v1/products/search",
+      expect.anything(),
+      expect.objectContaining({
+        asins: { filter: ["B001"] },
+      }),
+      expect.anything()
+    );
+  });
+
   it("rejects unsupported seller filter keys before calling the API", async () => {
     const client = { post: vi.fn() } as any;
 

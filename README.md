@@ -154,7 +154,9 @@ Example:
 
 Common gotchas now caught client-side:
 
-- Use `asins`, not `asinList`
+- For one exact ASIN, prefer `asin`
+- If you use `asins`, send `asins: { "filter": ["ASIN"] }` or a bare array the adapter can coerce
+- Do not use `asinList`
 - Use `amazonSellerId` or `amazonSellerIds`, not `sellerId`
 - Use `searchTermValue`, not `searchTerm`
 - For subcategory-brand sorting, use `revenue`, not `monthlyRevenue`
@@ -164,6 +166,7 @@ Common gotchas now caught client-side:
 Examples of known-good filter keys by tool:
 
 - `smartscout_search_products`: `asin`, `asins`, `brandName`, `categoryName`, `subcategoryName`, `subcategoryId`, `rank`, `monthlyRevenueEstimate`, `reviewCount`, `reviewRating`, `buyBoxPrice`, `productPageScore`, `numberOfSellers`, `numberFbaSellers`, `outOfStockNow`, `isVariation`, `parentAsin`, `title`, `upc`, `listedSince`
+  For a single exact product lookup, `asin` is the simplest and most reliable form.
 - `smartscout_search_sellers`: `amazonSellerId`, `amazonSellerIds`, `sellerName`, `sellerNames`, `businessName`, `businessNames`, `categoryName`, `subcategoryName`, `estimateSales`, `percentFba`, `numberWinningBrands`, `numberAsins`, `numberTopAsins`, `numberReviewsLifetime`, `numberReviews30Days`, `city`, `state`, `country`, `zipCode`, `isSuspended`
 - `smartscout_search_terms`: `searchTermValue`, `estimateSearches`, `estimatedCpc`, `brands`, `products`, `superCharge`
 
