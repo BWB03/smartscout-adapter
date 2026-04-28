@@ -1,6 +1,10 @@
+import { createRequire } from "node:module";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+const pkg = createRequire(import.meta.url)("../package.json") as { version: string };
 
 import { DEFAULT_MARKETPLACE, MARKETPLACES, MAX_PAGE_SIZE } from "./constants.js";
 import { SmartScoutClient, SmartScoutApiError } from "./adapter/client.js";
@@ -40,7 +44,7 @@ import { extractPagination } from "./utils/pagination.js";
 const client = new SmartScoutClient();
 const server = new McpServer({
   name: "smartscout-adapter",
-  version: "1.0.0",
+  version: pkg.version,
 });
 
 const marketplaceArg = z
