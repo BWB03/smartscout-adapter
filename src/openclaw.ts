@@ -1,4 +1,5 @@
 import { SmartScoutClient, SmartScoutApiError } from "./adapter/client.js";
+import { SmartScoutValidationError } from "./adapter/validation.js";
 import {
   estimateSales,
   getBrandMarketShare,
@@ -47,6 +48,9 @@ export class SmartScoutSkill {
         err.message,
         err.httpStatus
       );
+    }
+    if (err instanceof SmartScoutValidationError) {
+      return toErrorEnvelope("smartscout_validation", err.message, 400);
     }
     return toErrorEnvelope(
       "adapter_error",

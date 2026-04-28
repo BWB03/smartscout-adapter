@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { DEFAULT_MARKETPLACE, MARKETPLACES, MAX_PAGE_SIZE } from "./constants.js";
 import { SmartScoutClient, SmartScoutApiError } from "./adapter/client.js";
+import { SmartScoutValidationError } from "./adapter/validation.js";
 import {
   estimateSales,
   getBrandMarketShare,
@@ -59,7 +60,7 @@ const sortOrderArg = z.enum(["asc", "desc"]).optional().describe("Sort order");
 const filtersArg = z
   .record(z.unknown())
   .optional()
-  .describe("Raw SmartScout filter object matching the official request schema");
+  .describe("Raw SmartScout filter object using official SmartScout field names only");
 
 function errorResult(err: unknown) {
   const envelope =
@@ -69,6 +70,8 @@ function errorResult(err: unknown) {
           err.message,
           err.httpStatus
         )
+      : err instanceof SmartScoutValidationError
+        ? toErrorEnvelope("smartscout_validation", err.message, 400)
       : toErrorEnvelope(
           "adapter_error",
           err instanceof Error ? err.message : "Unknown error"
@@ -88,7 +91,7 @@ function okResult(envelope: unknown) {
 
 server.tool(
   "smartscout_search_brands",
-  "Search SmartScout brands using the official filter DSL. Returns brand metrics like revenue, seller density, review counts, and brand score.",
+  "Search SmartScout brands. Known filter keys include brandName, brandNames, monthlyRevenue, totalProducts, totalReviews, avgPrice, avgSellers, avgFbaSellers, categoryName, subcategoryName, subcategoryId, brandScore, monthGrowth, and monthGrowth12.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,
@@ -120,7 +123,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_brand_market_share",
-  "Get a brand's subcategory market-share footprint from SmartScout.",
+  "Get a brand's subcategory market-share footprint from SmartScout. Known sort_by fields include revenue, marketshare, avgPrice, avgVolume, totalReviews, and numberASINs.",
   {
     brand_name: z.string().describe("Brand name to look up"),
     marketplace: marketplaceArg,
@@ -156,7 +159,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_brand_sellers",
-  "Get seller coverage for a specific brand from SmartScout.",
+  "Get seller coverage for a specific brand from SmartScout. Known sort_by fields include monthlyRevenue, estimateBrandPercentage, numberOffers, amazonSellerId, and brandName.",
   {
     brand_name: z.string().describe("Brand name to look up"),
     marketplace: marketplaceArg,
@@ -192,7 +195,7 @@ server.tool(
 
 server.tool(
   "smartscout_search_products",
-  "Search SmartScout products using the official filter DSL. Supports ASIN, brand, revenue, review, seller-count, and listing-level filters.",
+  "Search SmartScout products. Known filter keys include asin, asins, brandName, categoryName, subcategoryName, subcategoryId, rank, monthlyRevenueEstimate, reviewCount, reviewRating, buyBoxPrice, productPageScore, numberOfSellers, numberFbaSellers, outOfStockNow, isVariation, parentAsin, title, upc, and listedSince. Use asins, not asinList.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,
@@ -224,7 +227,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_product_history",
-  "Get SmartScout historical price/rank/offer data for an ASIN.",
+  "Get SmartScout historical price/rank/offer data for an ASIN. Known sort_by fields include date, salesRank, buyBoxPrice, newFbaPrice, newFbmPrice, reviewsCount, and newOfferCount. This endpoint uses a longer timeout because SmartScout history can be slow.",
   {
     asin: z.string().describe("ASIN to fetch history for"),
     marketplace: marketplaceArg,
@@ -260,7 +263,7 @@ server.tool(
 
 server.tool(
   "smartscout_search_sellers",
-  "Search SmartScout sellers using the official filter DSL. Supports seller IDs, geography, growth, FBA mix, and review filters.",
+  "Search SmartScout sellers. Known filter keys include amazonSellerId, amazonSellerIds, sellerName, sellerNames, businessName, businessNames, categoryName, subcategoryName, estimateSales, percentFba, numberWinningBrands, numberAsins, numberTopAsins, numberReviewsLifetime, numberReviews30Days, city, state, country, zipCode, and isSuspended. Use amazonSellerId or amazonSellerIds, not sellerId.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,
@@ -292,7 +295,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_seller_brands",
-  "Get brand coverage for a specific Amazon seller ID.",
+  "Get brand coverage for a specific Amazon seller ID. Known sort_by fields include monthlyRevenue, estimateBrandPercentage, numberOffers, amazonSellerId, and brandName.",
   {
     amazon_seller_id: z.string().describe("Amazon seller ID to inspect"),
     marketplace: marketplaceArg,
@@ -328,7 +331,7 @@ server.tool(
 
 server.tool(
   "smartscout_search_subcategories",
-  "Search SmartScout subcategories using the official filter DSL. Useful for market sizing and category discovery.",
+  "Search SmartScout subcategories. Known filter keys include id, ids, parentId, subcategoryName, subcategoryContextName, totalMonthlyRevenue, totalBrands, totalAsins, avgPrice, avgReviews, avgRating, avgNumberSellers, avgPageScore, avgVolume, totalNumberUnitsSold, totalReviews, azRevenuePct, and sellerRevenuePct.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,
@@ -364,7 +367,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_subcategory_brands",
-  "Get brand coverage inside a SmartScout subcategory.",
+  "Get brand coverage inside a SmartScout subcategory. Known sort_by fields include revenue, marketshare, avgPrice, avgVolume, totalReviews, totalNumberUnitsSold, numberASINs, reviewRating, and adSpendShare. Use revenue, not monthlyRevenue.",
   {
     subcategory_id: z.number().int().describe("SmartScout subcategory ID"),
     brand_name: z.string().optional().describe("Optional exact brand-name filter"),
@@ -406,7 +409,7 @@ server.tool(
 
 server.tool(
   "smartscout_search_terms",
-  "Search SmartScout search terms using the official filter DSL. Returns estimated search volume, CPC, and ranking concentration metrics.",
+  "Search SmartScout search terms. Known filter keys include searchTermValue, estimateSearches, estimatedCpc, brands, products, and superCharge. Use searchTermValue, not searchTerm.",
   {
     filters: filtersArg,
     marketplace: marketplaceArg,
@@ -442,7 +445,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_relevant_products",
-  "Get products that SmartScout considers relevant to an ASIN based on shared search-term behavior.",
+  "Get products that SmartScout considers relevant to an ASIN based on shared search-term behavior. Known filter keys include parentAsin, relevancyScore, and commonSearchTerms.",
   {
     asin: z.string().describe("Seed ASIN"),
     filters: filtersArg,
@@ -479,7 +482,7 @@ server.tool(
 
 server.tool(
   "smartscout_get_relevant_search_terms",
-  "Get search terms SmartScout considers relevant to an ASIN.",
+  "Get search terms SmartScout considers relevant to an ASIN. Known filter keys include searchTerm, intent, relevancy, estimatedSearches, and parentAsin.",
   {
     asin: z.string().describe("Seed ASIN"),
     filters: filtersArg,

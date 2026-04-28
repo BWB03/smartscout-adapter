@@ -119,6 +119,7 @@ npm run build
 | `SMARTSCOUT_RATE_LIMIT_RPS` | No | `2` | Requests per second |
 | `SMARTSCOUT_RATE_LIMIT_BURST` | No | `10` | Burst limit |
 | `SMARTSCOUT_TIMEOUT_MS` | No | `30000` | Request timeout in milliseconds |
+| `SMARTSCOUT_PRODUCT_HISTORY_TIMEOUT_MS` | No | `90000` | Timeout override for `smartscout_get_product_history` |
 
 ## Request Pattern
 
@@ -131,7 +132,7 @@ Search-style tools accept:
 - `sort_order`
 - `filters`
 
-`filters` is passed directly through to SmartScout’s request DSL, which keeps the adapter flexible and avoids freezing a partial hand-written schema.
+`filters` must use official SmartScout top-level field names. Invalid filter keys are rejected client-side with a `smartscout_validation` error instead of being silently passed through.
 
 Example:
 
@@ -150,6 +151,26 @@ Example:
   "page_size": 25
 }
 ```
+
+Common gotchas now caught client-side:
+
+- Use `asins`, not `asinList`
+- Use `amazonSellerId` or `amazonSellerIds`, not `sellerId`
+- Use `searchTermValue`, not `searchTerm`
+- For subcategory-brand sorting, use `revenue`, not `monthlyRevenue`
+
+## Known-Good Fields
+
+Examples of known-good filter keys by tool:
+
+- `smartscout_search_products`: `asin`, `asins`, `brandName`, `categoryName`, `subcategoryName`, `subcategoryId`, `rank`, `monthlyRevenueEstimate`, `reviewCount`, `reviewRating`, `buyBoxPrice`, `productPageScore`, `numberOfSellers`, `numberFbaSellers`, `outOfStockNow`, `isVariation`, `parentAsin`, `title`, `upc`, `listedSince`
+- `smartscout_search_sellers`: `amazonSellerId`, `amazonSellerIds`, `sellerName`, `sellerNames`, `businessName`, `businessNames`, `categoryName`, `subcategoryName`, `estimateSales`, `percentFba`, `numberWinningBrands`, `numberAsins`, `numberTopAsins`, `numberReviewsLifetime`, `numberReviews30Days`, `city`, `state`, `country`, `zipCode`, `isSuspended`
+- `smartscout_search_terms`: `searchTermValue`, `estimateSearches`, `estimatedCpc`, `brands`, `products`, `superCharge`
+
+Examples of known-good `sort_by` values:
+
+- `smartscout_get_subcategory_brands`: `revenue`, `marketshare`, `avgPrice`, `avgVolume`, `totalReviews`, `totalNumberUnitsSold`, `numberASINs`, `reviewRating`, `adSpendShare`
+- `smartscout_get_product_history`: `date`, `salesRank`, `buyBoxPrice`, `newFbaPrice`, `newFbmPrice`, `reviewsCount`, `newOfferCount`
 
 ## Output Pattern
 
@@ -187,6 +208,8 @@ This adapter has been live-tested against SmartScout with:
 - brand search
 - search term search
 - product search
+- product history for `B01MCWCHR8`
+- validation rejection for bad filter keys and bad sort keys
 
 The live integration test is in `tests/integration/live-api.test.ts`.
 
@@ -195,4 +218,5 @@ The live integration test is in `tests/integration/live-api.test.ts`.
 - SmartScout pagination is cursor-based, so the adapter returns `next_page_id` instead of page numbers.
 - Page size is capped at `1000`.
 - Default rate limiting matches the SmartScout guidance you shared: `2 requests/second`, burst `10`.
+- `smartscout_get_product_history` now uses a longer timeout, but SmartScout appears to return full history even when `page_size` is provided. Treat it as a full-history fetch until their API proves otherwise.
 - The next step after validating this repo with your key is wiring SmartScout into Helm as a BYO source.

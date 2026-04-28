@@ -45,4 +45,20 @@ describe("SmartScoutSkill", () => {
       }),
     ]);
   });
+
+  it("returns a validation envelope for unsupported filter keys", async () => {
+    const skill = new SmartScoutSkill("test-key");
+    const result = await skill.searchTerms(
+      { searchTerm: "collagen" },
+      { marketplace: "US" }
+    );
+
+    expect(result.data_type).toBe("error");
+    expect(result.error).toEqual(
+      expect.objectContaining({
+        code: "smartscout_validation",
+        http_status: 400,
+      })
+    );
+  });
 });

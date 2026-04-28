@@ -42,18 +42,20 @@ export class SmartScoutClient {
   async get<T>(
     path: string,
     schema: ZodSchema<T>,
-    params?: Record<string, string | number | undefined>
+    params?: Record<string, string | number | undefined>,
+    opts?: { timeoutMs?: number }
   ): Promise<T> {
-    return this.request("GET", path, schema, undefined, params);
+    return this.request("GET", path, schema, undefined, params, opts);
   }
 
   async post<T>(
     path: string,
     schema: ZodSchema<T>,
     body?: unknown,
-    params?: Record<string, string | number | undefined>
+    params?: Record<string, string | number | undefined>,
+    opts?: { timeoutMs?: number }
   ): Promise<T> {
-    return this.request("POST", path, schema, body, params);
+    return this.request("POST", path, schema, body, params, opts);
   }
 
   private async request<T>(
@@ -61,7 +63,8 @@ export class SmartScoutClient {
     path: string,
     schema: ZodSchema<T>,
     body?: unknown,
-    params?: Record<string, string | number | undefined>
+    params?: Record<string, string | number | undefined>,
+    opts?: { timeoutMs?: number }
   ): Promise<T> {
     await this.bucket.acquire();
 
@@ -74,8 +77,9 @@ export class SmartScoutClient {
       }
     }
 
+    const timeoutMs = opts?.timeoutMs ?? this.timeoutMs;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const res = await fetch(url.toString(), {
@@ -103,7 +107,7 @@ export class SmartScoutClient {
       if (err instanceof SmartScoutApiError) throw err;
       if (err instanceof Error && err.name === "AbortError") {
         throw new SmartScoutApiError(
-          `SmartScout API request timed out after ${this.timeoutMs}ms`,
+          `SmartScout API request timed out after ${timeoutMs}ms`,
           408
         );
       }

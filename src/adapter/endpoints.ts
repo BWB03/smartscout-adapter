@@ -17,6 +17,27 @@ import {
   SmartScoutFiltersSchema,
   SubcategoryBrandsResponseSchema,
 } from "../schema/smartscout.js";
+import {
+  validateBrandMarketShareSort,
+  validateBrandSearchFilters,
+  validateBrandSellerSort,
+  validateBrandSort,
+  validateProductHistorySort,
+  validateProductSearchFilters,
+  validateProductSort,
+  validateRelevantProductFilters,
+  validateRelevantProductSort,
+  validateRelevantSearchTermFilters,
+  validateRelevantSearchTermSort,
+  validateSearchTermFilters,
+  validateSearchTermSort,
+  validateSellerBrandSort,
+  validateSellerSearchFilters,
+  validateSellerSort,
+  validateSubcategoryBrandSort,
+  validateSubcategorySearchFilters,
+  validateSubcategorySort,
+} from "./validation.js";
 
 export interface SearchOptions {
   marketplace?: Marketplace;
@@ -38,16 +59,22 @@ function toQuery(opts?: SearchOptions) {
   };
 }
 
+function productHistoryTimeoutMs() {
+  return Number(process.env.SMARTSCOUT_PRODUCT_HISTORY_TIMEOUT_MS) || 90_000;
+}
+
 export async function searchBrands(
   client: SmartScoutClient,
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateBrandSearchFilters(filters);
+  const sortBy = validateBrandSort(opts?.sortBy);
   return client.post(
     "/api/v2/brands/search",
     SearchBrandsResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -56,8 +83,9 @@ export async function getBrandMarketShare(
   brandName: string,
   opts?: SearchOptions
 ) {
+  const sortBy = validateBrandMarketShareSort(opts?.sortBy);
   return client.get("/api/v2/brands/market-share", BrandMarketShareResponseSchema, {
-    ...toQuery(opts),
+    ...toQuery({ ...opts, sortBy }),
     brandName,
   });
 }
@@ -67,8 +95,9 @@ export async function getBrandSellers(
   brandName: string,
   opts?: SearchOptions
 ) {
+  const sortBy = validateBrandSellerSort(opts?.sortBy);
   return client.get("/api/v2/brands/sellers", BrandSellersResponseSchema, {
-    ...toQuery(opts),
+    ...toQuery({ ...opts, sortBy }),
     brandName,
   });
 }
@@ -78,11 +107,13 @@ export async function searchProducts(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateProductSearchFilters(filters);
+  const sortBy = validateProductSort(opts?.sortBy);
   return client.post(
     "/api/v1/products/search",
     SearchProductsResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -91,10 +122,12 @@ export async function getProductHistory(
   asin: string,
   opts?: SearchOptions
 ) {
+  const sortBy = validateProductHistorySort(opts?.sortBy);
   return client.get(
     `/api/v1/products/${encodeURIComponent(asin)}/history`,
     ProductHistoryResponseSchema,
-    toQuery(opts)
+    toQuery({ ...opts, sortBy }),
+    { timeoutMs: productHistoryTimeoutMs() }
   );
 }
 
@@ -103,11 +136,13 @@ export async function searchSellers(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateSellerSearchFilters(filters);
+  const sortBy = validateSellerSort(opts?.sortBy);
   return client.post(
     "/api/v1/sellers/search",
     SearchSellersResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -116,10 +151,11 @@ export async function getSellerBrands(
   amazonSellerId: string,
   opts?: SearchOptions
 ) {
+  const sortBy = validateSellerBrandSort(opts?.sortBy);
   return client.get(
     `/api/v1/sellers/${encodeURIComponent(amazonSellerId)}/brands`,
     SellerBrandsResponseSchema,
-    toQuery(opts)
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -128,11 +164,13 @@ export async function searchSubcategories(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateSubcategorySearchFilters(filters);
+  const sortBy = validateSubcategorySort(opts?.sortBy);
   return client.post(
     "/api/v1/subcategories/search",
     SearchSubcategoriesResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -142,11 +180,12 @@ export async function getSubcategoryBrands(
   filters?: { brandName?: string },
   opts?: SearchOptions
 ) {
+  const sortBy = validateSubcategoryBrandSort(opts?.sortBy);
   return client.post(
     `/api/v1/subcategories/${subcategoryId}/brands`,
     SubcategoryBrandsResponseSchema,
     filters ?? {},
-    toQuery(opts)
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -155,11 +194,13 @@ export async function searchTerms(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateSearchTermFilters(filters);
+  const sortBy = validateSearchTermSort(opts?.sortBy);
   return client.post(
     "/api/v1/search-terms/search",
     SearchTermsResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -169,11 +210,13 @@ export async function getRelevantProducts(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateRelevantProductFilters(filters);
+  const sortBy = validateRelevantProductSort(opts?.sortBy);
   return client.post(
     `/api/v1/search-terms/relevant-products/${encodeURIComponent(asin)}`,
     RelevantProductsResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 
@@ -183,11 +226,13 @@ export async function getRelevantSearchTerms(
   filters?: Record<string, unknown>,
   opts?: SearchOptions
 ) {
+  const validatedFilters = validateRelevantSearchTermFilters(filters);
+  const sortBy = validateRelevantSearchTermSort(opts?.sortBy);
   return client.post(
     `/api/v1/search-terms/relevant-search-terms/${encodeURIComponent(asin)}`,
     RelevantSearchTermsResponseSchema,
-    SmartScoutFiltersSchema.parse(filters ?? {}),
-    toQuery(opts)
+    SmartScoutFiltersSchema.parse(validatedFilters ?? {}),
+    toQuery({ ...opts, sortBy })
   );
 }
 

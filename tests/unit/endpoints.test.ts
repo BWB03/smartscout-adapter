@@ -3,7 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import {
   estimateSales,
   getProductHistory,
+  getSubcategoryBrands,
   searchBrands,
+  searchProducts,
+  searchSellers,
+  searchTerms,
 } from "../../src/adapter/endpoints.js";
 
 describe("smartscout endpoints", () => {
@@ -39,7 +43,8 @@ describe("smartscout endpoints", () => {
     expect(client.get).toHaveBeenCalledWith(
       "/api/v1/products/B00%2FABC/history",
       expect.anything(),
-      expect.objectContaining({ marketplace: "US" })
+      expect.objectContaining({ marketplace: "US" }),
+      expect.objectContaining({ timeoutMs: 90000 })
     );
   });
 
@@ -57,5 +62,48 @@ describe("smartscout endpoints", () => {
         salesRank: 25,
       }
     );
+  });
+
+  it("rejects unsupported product filter keys before calling the API", async () => {
+    const client = { post: vi.fn() } as any;
+
+    await expect(
+      searchProducts(client, { asinList: ["B001"] }, { marketplace: "US" })
+    ).rejects.toThrow(/asinList/);
+
+    expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported seller filter keys before calling the API", async () => {
+    const client = { post: vi.fn() } as any;
+
+    await expect(
+      searchSellers(client, { sellerId: "A123" }, { marketplace: "US" })
+    ).rejects.toThrow(/sellerId/);
+
+    expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported search-term filter keys before calling the API", async () => {
+    const client = { post: vi.fn() } as any;
+
+    await expect(
+      searchTerms(client, { searchTerm: "collagen" }, { marketplace: "US" })
+    ).rejects.toThrow(/searchTerm/);
+
+    expect(client.post).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported sort keys before calling the API", async () => {
+    const client = { post: vi.fn() } as any;
+
+    await expect(
+      getSubcategoryBrands(client, 123, undefined, {
+        marketplace: "US",
+        sortBy: "monthlyRevenue",
+      })
+    ).rejects.toThrow(/monthlyRevenue/);
+
+    expect(client.post).not.toHaveBeenCalled();
   });
 });
