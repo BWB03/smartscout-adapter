@@ -1,6 +1,6 @@
 {
   "name": "smartscout-adapter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "SkillCrate adapter: MCP server + OpenClaw skill for SmartScout Amazon market intelligence",
   "type": "module",
   "bin": {

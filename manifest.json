@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "smartscout-adapter",
   "display_name": "SmartScout Adapter",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for SmartScout Amazon market intelligence tools.",
   "long_description": "SmartScout Adapter exposes SmartScout Amazon market intelligence data as MCP tools for brand, product, seller, subcategory, search term, relevance, and sales estimate workflows.",
   "author": {
