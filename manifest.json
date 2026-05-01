@@ -1,0 +1,116 @@
+{
+  "manifest_version": "0.3",
+  "name": "smartscout-adapter",
+  "display_name": "SmartScout Adapter",
+  "version": "1.1.0",
+  "description": "MCP server for SmartScout Amazon market intelligence tools.",
+  "long_description": "SmartScout Adapter exposes SmartScout Amazon market intelligence data as MCP tools for brand, product, seller, subcategory, search term, relevance, and sales estimate workflows.",
+  "author": {
+    "name": "SkillCrate",
+    "url": "https://skillcrate.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BWB03/smartscout-adapter.git"
+  },
+  "homepage": "https://skillcrate.dev",
+  "documentation": "https://github.com/BWB03/smartscout-adapter#readme",
+  "support": "https://github.com/BWB03/smartscout-adapter/issues",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
+      "env": {
+        "SMARTSCOUT_API_KEY": "${user_config.smartscout_api_key}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "smartscout_search_brands",
+      "description": "Search SmartScout brands."
+    },
+    {
+      "name": "smartscout_get_brand_market_share",
+      "description": "Get a brand's SmartScout subcategory market-share footprint."
+    },
+    {
+      "name": "smartscout_get_brand_sellers",
+      "description": "Get seller coverage for a SmartScout brand."
+    },
+    {
+      "name": "smartscout_search_products",
+      "description": "Search SmartScout products."
+    },
+    {
+      "name": "smartscout_get_product_history",
+      "description": "Get SmartScout product history for an ASIN."
+    },
+    {
+      "name": "smartscout_search_sellers",
+      "description": "Search SmartScout sellers."
+    },
+    {
+      "name": "smartscout_get_seller_brands",
+      "description": "Get brands carried by a SmartScout seller."
+    },
+    {
+      "name": "smartscout_search_subcategories",
+      "description": "Search SmartScout subcategories."
+    },
+    {
+      "name": "smartscout_get_subcategory_brands",
+      "description": "Get brands in a SmartScout subcategory."
+    },
+    {
+      "name": "smartscout_search_terms",
+      "description": "Search SmartScout search terms."
+    },
+    {
+      "name": "smartscout_get_relevant_products",
+      "description": "Get SmartScout products relevant to an ASIN."
+    },
+    {
+      "name": "smartscout_get_relevant_search_terms",
+      "description": "Get SmartScout search terms relevant to an ASIN."
+    },
+    {
+      "name": "smartscout_estimate_sales",
+      "description": "Estimate monthly sales velocity from category node and sales rank."
+    }
+  ],
+  "keywords": [
+    "smartscout",
+    "amazon",
+    "market-intelligence",
+    "mcp",
+    "skillcrate"
+  ],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://www.smartscout.com/privacy-policy"
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "user_config": {
+    "smartscout_api_key": {
+      "type": "string",
+      "title": "SmartScout API Key",
+      "description": "Your SmartScout API key.",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

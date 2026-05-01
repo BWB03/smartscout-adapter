@@ -36,7 +36,33 @@ npm install
 npm run build
 ```
 
-## Install Via MCP
+## Install Via Claude Desktop MCPB
+
+The easiest Claude Desktop install path is the `.mcpb` bundle from GitHub Releases.
+
+1. Download `smartscout-adapter-vX.Y.Z.mcpb` from the latest release.
+2. Open the `.mcpb` file with Claude Desktop.
+3. Enter your SmartScout API key when Claude asks for `SmartScout API Key`.
+4. Enable or restart the extension if Claude Desktop prompts you.
+5. Start a new Claude chat and confirm the SmartScout tools are available.
+
+The bundle passes your key to the local MCP server as `SMARTSCOUT_API_KEY`. The adapter still runs locally; SmartScout API calls go to SmartScout's API.
+
+## Build A Local MCPB
+
+```bash
+npm install
+npm run mcpb:validate
+npm run mcpb:pack
+```
+
+The packaged bundle is written to:
+
+```bash
+release/smartscout-adapter-v1.1.0.mcpb
+```
+
+## Install Via Manual MCP
 
 ### Install From GitHub Source
 
@@ -71,6 +97,8 @@ SMARTSCOUT_API_KEY=your_api_key_here
 
 ## Claude Desktop MCP Config
 
+If you prefer manual JSON config instead of the `.mcpb` installer, add this server to Claude Desktop's MCP settings:
+
 ```json
 {
   "mcpServers": {
@@ -83,6 +111,37 @@ SMARTSCOUT_API_KEY=your_api_key_here
     }
   }
 }
+```
+
+Restart Claude Desktop after saving the config.
+
+## Claude Code / Codex Setup
+
+Claude Code, Codex, and other stdio MCP clients can use the same local server command after building from source:
+
+```json
+{
+  "mcpServers": {
+    "smartscout": {
+      "command": "node",
+      "args": ["/absolute/path/to/smartscout-adapter/dist/index.js"],
+      "env": {
+        "SMARTSCOUT_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+For Codex CLI-style configs, use the equivalent command/args/env shape supported by your client:
+
+```toml
+[mcp_servers.smartscout]
+command = "node"
+args = ["/absolute/path/to/smartscout-adapter/dist/index.js"]
+
+[mcp_servers.smartscout.env]
+SMARTSCOUT_API_KEY = "your_api_key_here"
 ```
 
 ### Generic MCP Client Config
@@ -110,6 +169,8 @@ git pull
 npm install
 npm run build
 ```
+
+For MCPB releases, download and install the newer `.mcpb` file from GitHub Releases.
 
 ## Environment
 
@@ -201,8 +262,45 @@ Every response uses the same normalized envelope:
 ```bash
 npm test
 npm run build
+npm run mcpb:validate
+npm run mcpb:pack
 SMARTSCOUT_API_KEY=xxx npm run test:integration
 ```
+
+## MCPB Release Flow
+
+Version tags create GitHub Releases with the packaged `.mcpb` attached:
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The release workflow runs tests, builds the adapter, validates the MCPB manifest, packs the bundle, and uploads `release/*.mcpb` as a release asset.
+
+## MCPB Test Checklist
+
+- Run `npm test`.
+- Run `npm run build`.
+- Run `npm run mcpb:validate`.
+- Run `npm run mcpb:pack`.
+- Confirm `release/smartscout-adapter-v1.1.0.mcpb` exists.
+- Open the `.mcpb` file with Claude Desktop.
+- Enter `SMARTSCOUT_API_KEY` in the install form.
+- Confirm SmartScout tools appear in Claude Desktop.
+- Run a low-cost brand or product search.
+- Temporarily install with a missing or invalid key and confirm the adapter returns a clear SmartScout/API-key error rather than crashing.
+- Push a version tag and confirm the GitHub Action attaches the `.mcpb` to the release.
+
+## Troubleshooting
+
+- **Claude Desktop does not show the tools:** restart Claude Desktop, confirm the extension is enabled, and reinstall the `.mcpb` if needed.
+- **Missing API key errors:** reinstall or edit the extension configuration and enter a valid SmartScout API key.
+- **Invalid SmartScout key or unauthorized responses:** verify the key works against SmartScout directly and has access to the API endpoints you are calling.
+- **Node/runtime errors:** use the `.mcpb` install path when possible. For manual installs, confirm `node --version` is `18` or newer.
+- **Build output looks stale:** run `npm run build`, then `npm run mcpb:pack` again.
+- **Network/API failures:** confirm the machine running Claude Desktop can reach `https://api.smartscout.com`.
+- **Manual JSON config does not work:** use an absolute path to `dist/index.js`, keep `command` as `node`, and restart the MCP client after editing config.
 
 ## Live Validation
 
